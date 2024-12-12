@@ -23,3 +23,8 @@ go.work.sum
 
 # env file
 .env
+.idea/modules.xml
+.idea/uuid-checker.iml
+.idea/vcs.xml
+.idea/uuidcheck.iml
+.idea/workspace.xml
