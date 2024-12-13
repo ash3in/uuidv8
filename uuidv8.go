@@ -3,8 +3,11 @@
 package uuidv8
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // Constants for the variant and version of UUIDs based on the RFC4122 specification.
@@ -32,7 +35,38 @@ type UUIDv8 struct {
 	Node      []byte // The node component of the UUID (typically 6 bytes).
 }
 
-// NewUUIDv8 generates a new UUIDv8 based on the provided timestamp, clock sequence, and node.
+// New generates a UUIDv8 with default parameters.
+//
+// Default behavior:
+// - Timestamp: Current time in nanoseconds.
+// - ClockSeq: Random 12-bit value.
+// - Node: Random 6-byte node identifier.
+//
+// Returns:
+// - A string representation of the generated UUIDv8.
+// - An error if any component generation fails.
+func New() (string, error) {
+	// Current timestamp
+	timestamp := uint64(time.Now().UnixNano())
+
+	// Random clock sequence
+	clockSeq := make([]byte, 2)
+	if _, err := rand.Read(clockSeq); err != nil {
+		return "", fmt.Errorf("failed to generate random clock sequence: %w", err)
+	}
+	clockSeqValue := binary.BigEndian.Uint16(clockSeq) & 0x0FFF // Mask to 12 bits
+
+	// Random node
+	node := make([]byte, 6)
+	if _, err := rand.Read(node); err != nil {
+		return "", fmt.Errorf("failed to generate random node: %w", err)
+	}
+
+	// Generate UUIDv8
+	return NewWithParams(timestamp, clockSeqValue, node, TimestampBits48)
+}
+
+// NewWithParams generates a new UUIDv8 based on the provided timestamp, clock sequence, and node.
 //
 // Parameters:
 // - timestamp: A 32-, 48-, or 60-bit timestamp value (depending on `timestampBits`).
@@ -43,7 +77,7 @@ type UUIDv8 struct {
 // Returns:
 // - A string representation of the generated UUIDv8.
 // - An error if the input parameters are invalid (e.g., incorrect node length or unsupported timestamp size).
-func NewUUIDv8(timestamp uint64, clockSeq uint16, node []byte, timestampBits int) (string, error) {
+func NewWithParams(timestamp uint64, clockSeq uint16, node []byte, timestampBits int) (string, error) {
 	if len(node) != 6 {
 		return "", fmt.Errorf("node must be 6 bytes, got %d bytes", len(node))
 	}

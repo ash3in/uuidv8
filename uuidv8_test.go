@@ -9,6 +9,20 @@ import (
 	"github.com/ash3in/uuidv8"
 )
 
+func TestNew_DefaultBehavior(t *testing.T) {
+	t.Run("Generate UUIDv8 with default settings", func(t *testing.T) {
+		uuid, err := uuidv8.New()
+		if err != nil {
+			t.Fatalf("New() failed: %v", err)
+		}
+
+		// Check if the UUID is valid
+		if !uuidv8.IsValidUUIDv8(uuid) {
+			t.Errorf("New() generated an invalid UUID: %s", uuid)
+		}
+	})
+}
+
 func TestNewUUIDv8(t *testing.T) {
 	node := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	timestamp := uint64(1633024800000000000) // Fixed timestamp for deterministic tests
@@ -27,7 +41,7 @@ func TestNewUUIDv8(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			uuid, err := uuidv8.NewUUIDv8(timestamp, clockSeq, node, test.timestampBits)
+			uuid, err := uuidv8.NewWithParams(timestamp, clockSeq, node, test.timestampBits)
 			if (err != nil) != test.expectedErr {
 				t.Errorf("Expected error: %v, got: %v", test.expectedErr, err)
 			}
@@ -49,7 +63,7 @@ func TestNewUUIDv8_NodeValidation(t *testing.T) {
 
 	for _, node := range invalidNodes {
 		t.Run("Invalid node length", func(t *testing.T) {
-			_, err := uuidv8.NewUUIDv8(1633024800, 0, node, uuidv8.TimestampBits48)
+			_, err := uuidv8.NewWithParams(1633024800, 0, node, uuidv8.TimestampBits48)
 			if err == nil {
 				t.Errorf("Expected error for invalid node: %v", node)
 			}
@@ -84,9 +98,9 @@ func TestFromString(t *testing.T) {
 	timestamp := uint64(1633024800000000000) // Fixed timestamp
 	clockSeq := uint16(0)
 
-	uuid, err := uuidv8.NewUUIDv8(timestamp, clockSeq, node, uuidv8.TimestampBits48)
+	uuid, err := uuidv8.NewWithParams(timestamp, clockSeq, node, uuidv8.TimestampBits48)
 	if err != nil {
-		t.Fatalf("NewUUIDv8 failed: %v", err)
+		t.Fatalf("NewWithParams failed: %v", err)
 	}
 
 	parsed, err := uuidv8.FromString(uuid)
@@ -164,7 +178,7 @@ func TestConcurrencySafety(t *testing.T) {
 
 			timestamp := uint64(time.Now().UnixNano()) + uint64(index)
 
-			uuid, err := uuidv8.NewUUIDv8(timestamp, clockSeq, node, uuidv8.TimestampBits48)
+			uuid, err := uuidv8.NewWithParams(timestamp, clockSeq, node, uuidv8.TimestampBits48)
 			if err != nil {
 				t.Errorf("Failed to generate UUIDv8 in concurrent environment: %v", err)
 			}
@@ -194,7 +208,7 @@ func TestEdgeCases(t *testing.T) {
 	node := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 
 	t.Run("Minimum timestamp and clock sequence", func(t *testing.T) {
-		uuid, err := uuidv8.NewUUIDv8(0, 0, node, uuidv8.TimestampBits48)
+		uuid, err := uuidv8.NewWithParams(0, 0, node, uuidv8.TimestampBits48)
 		if err != nil || uuid == "" {
 			t.Error("Failed to generate UUID with minimal timestamp and clock sequence")
 		}
@@ -203,7 +217,7 @@ func TestEdgeCases(t *testing.T) {
 	t.Run("Maximum timestamp and clock sequence", func(t *testing.T) {
 		maxTimestamp := uint64(1<<48 - 1)
 		maxClockSeq := uint16(1<<12 - 1)
-		uuid, err := uuidv8.NewUUIDv8(maxTimestamp, maxClockSeq, node, uuidv8.TimestampBits48)
+		uuid, err := uuidv8.NewWithParams(maxTimestamp, maxClockSeq, node, uuidv8.TimestampBits48)
 		if err != nil || uuid == "" {
 			t.Error("Failed to generate UUID with maximum timestamp and clock sequence")
 		}
@@ -220,7 +234,7 @@ func TestMarshalJSON(t *testing.T) {
 	clockSeq := uint16(0)
 
 	// Generate a valid UUIDv8
-	uuidStr, err := uuidv8.NewUUIDv8(timestamp, clockSeq, node, uuidv8.TimestampBits48)
+	uuidStr, err := uuidv8.NewWithParams(timestamp, clockSeq, node, uuidv8.TimestampBits48)
 	if err != nil {
 		t.Fatalf("Failed to generate UUIDv8: %v", err)
 	}
@@ -285,7 +299,7 @@ func TestUnmarshalJSON(t *testing.T) {
 	clockSeq := uint16(0)
 
 	// Generate a valid UUIDv8
-	uuidStr, err := uuidv8.NewUUIDv8(timestamp, clockSeq, node, uuidv8.TimestampBits48)
+	uuidStr, err := uuidv8.NewWithParams(timestamp, clockSeq, node, uuidv8.TimestampBits48)
 	if err != nil {
 		t.Fatalf("Failed to generate UUIDv8: %v", err)
 	}
@@ -333,5 +347,112 @@ func TestUnmarshalInvalidJSON(t *testing.T) {
 		if err == nil {
 			t.Errorf("Expected error for invalid JSON input: %s", jsonData)
 		}
+	}
+}
+
+func TestNew_Uniqueness(t *testing.T) {
+	const numUUIDs = 1000
+	uuidSet := make(map[string]struct{})
+
+	for i := 0; i < numUUIDs; i++ {
+		uuid, err := uuidv8.New()
+		if err != nil {
+			t.Fatalf("New() failed: %v", err)
+		}
+
+		if _, exists := uuidSet[uuid]; exists {
+			t.Errorf("Duplicate UUID generated: %s", uuid)
+		}
+		uuidSet[uuid] = struct{}{}
+	}
+
+	if len(uuidSet) != numUUIDs {
+		t.Errorf("Expected %d unique UUIDs, but got %d", numUUIDs, len(uuidSet))
+	}
+}
+
+func TestNew_ConcurrencySafety(t *testing.T) {
+	const concurrencyLevel = 100
+	var wg sync.WaitGroup
+	uuidSet := sync.Map{}
+
+	for i := 0; i < concurrencyLevel; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			uuid, err := uuidv8.New()
+			if err != nil {
+				t.Errorf("New() failed in concurrent environment: %v", err)
+			}
+			uuidSet.Store(uuid, true)
+		}()
+	}
+
+	wg.Wait()
+
+	// Verify uniqueness
+	count := 0
+	uuidSet.Range(func(_, _ interface{}) bool {
+		count++
+		return true
+	})
+
+	if count != concurrencyLevel {
+		t.Errorf("Expected %d unique UUIDs, but got %d", concurrencyLevel, count)
+	}
+}
+
+func TestNew_IntegrationWithParsing(t *testing.T) {
+	uuid, err := uuidv8.New()
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+
+	parsed, err := uuidv8.FromString(uuid)
+	if err != nil {
+		t.Errorf("FromString failed to parse UUID generated by New(): %v", err)
+	}
+
+	if parsed == nil {
+		t.Error("Parsed UUID is nil")
+	}
+}
+
+func TestNew_EdgeCases(t *testing.T) {
+	t.Run("Minimal possible timestamp and clock sequence", func(t *testing.T) {
+		uuid, err := uuidv8.New()
+		if err != nil {
+			t.Fatalf("New() failed: %v", err)
+		}
+
+		parsed, _ := uuidv8.FromString(uuid)
+		if parsed.Timestamp == 0 || parsed.ClockSeq == 0 {
+			t.Errorf("New() generated UUID with invalid minimal values: %s", uuid)
+		}
+	})
+}
+
+func TestNew_JSONSerializationIntegration(t *testing.T) {
+	uuid, err := uuidv8.New()
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+
+	// Serialize to JSON
+	jsonData, err := json.Marshal(uuid)
+	if err != nil {
+		t.Errorf("Failed to marshal UUID to JSON: %v", err)
+	}
+
+	// Deserialize from JSON
+	var parsedUUID uuidv8.UUIDv8
+	err = json.Unmarshal(jsonData, &parsedUUID)
+	if err != nil {
+		t.Errorf("Failed to unmarshal JSON to UUIDv8: %v", err)
+	}
+
+	// Ensure the deserialized UUID matches the original
+	if uuidv8.ToString(&parsedUUID) != uuid {
+		t.Errorf("Mismatch between original and deserialized UUID: original %s, deserialized %s", uuid, uuidv8.ToString(&parsedUUID))
 	}
 }
