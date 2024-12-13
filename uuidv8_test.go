@@ -456,3 +456,108 @@ func TestNew_JSONSerializationIntegration(t *testing.T) {
 		t.Errorf("Mismatch between original and deserialized UUID: original %s, deserialized %s", uuid, uuidv8.ToString(&parsedUUID))
 	}
 }
+
+func TestEncodeTimestamp_InvalidTimestampBits(t *testing.T) {
+	invalidBits := []int{0, 16, 64} // Unsupported timestamp bit sizes
+	for _, bits := range invalidBits {
+		t.Run("Invalid timestamp bits", func(t *testing.T) {
+			node := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+			_, err := uuidv8.NewWithParams(1633024800, 0, node, bits)
+			if err == nil {
+				t.Errorf("Expected error for invalid timestamp bits: %d", bits)
+			}
+		})
+	}
+}
+
+func TestEncodeTimestamp_BoundaryValues(t *testing.T) {
+	boundaryTimestamps := []struct {
+		timestamp uint64
+		bits      int
+	}{
+		{timestamp: 0, bits: uuidv8.TimestampBits32}, // Minimal 32-bit
+		{timestamp: (1 << 32) - 1, bits: uuidv8.TimestampBits32},
+		{timestamp: 0, bits: uuidv8.TimestampBits48}, // Minimal 48-bit
+		{timestamp: (1 << 48) - 1, bits: uuidv8.TimestampBits48},
+		{timestamp: 0, bits: uuidv8.TimestampBits60}, // Minimal 60-bit
+		{timestamp: (1 << 60) - 1, bits: uuidv8.TimestampBits60},
+	}
+	for _, test := range boundaryTimestamps {
+		t.Run("Boundary timestamp", func(t *testing.T) {
+			node := []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+			uuid, err := uuidv8.NewWithParams(test.timestamp, 0, node, test.bits)
+			if err != nil {
+				t.Errorf("Failed to generate UUID with timestamp %d and bits %d: %v", test.timestamp, test.bits, err)
+			}
+			if !uuidv8.IsValidUUIDv8(uuid) {
+				t.Errorf("Generated UUID is invalid: %s", uuid)
+			}
+		})
+	}
+}
+
+func TestParseUUID_InvalidFormats(t *testing.T) {
+	invalidUUIDs := []string{
+		"1234",                 // Too short
+		"gibberish-not-a-uuid", // Invalid characters
+	}
+	for _, uuid := range invalidUUIDs {
+		t.Run("Invalid format", func(t *testing.T) {
+			parsed := uuidv8.FromStringOrNil(uuid)
+			if parsed != nil {
+				t.Errorf("Expected nil for invalid UUID format: %s", uuid)
+			}
+		})
+	}
+}
+
+func TestFromString_ErrorScenarios(t *testing.T) {
+	t.Run("Invalid UUID string", func(t *testing.T) {
+		_, err := uuidv8.FromString("not-a-uuid")
+		if err == nil {
+			t.Error("Expected error for invalid UUID string")
+		}
+	})
+}
+
+func TestToString_EmptyUUID(t *testing.T) {
+	emptyUUID := &uuidv8.UUIDv8{} // Uninitialized UUIDv8
+	if result := uuidv8.ToString(emptyUUID); result != "00000000-0000-8080-0000-000000000000" {
+		t.Errorf("Expected empty string for uninitialized UUID, got %s", result)
+	}
+}
+
+func TestMarshalJSON_ErrorCases(t *testing.T) {
+	invalidUUID := &uuidv8.UUIDv8{
+		Timestamp: 0,
+		ClockSeq:  0x1000,                   // Invalid clock sequence (exceeds 12 bits)
+		Node:      []byte{0x01, 0x02, 0x03}, // Invalid node length
+	}
+	_, err := invalidUUID.MarshalJSON()
+	if err == nil {
+		t.Errorf("Expected error for invalid UUID in MarshalJSON")
+	}
+}
+
+func TestUnmarshalJSON_ErrorCases(t *testing.T) {
+	invalidJSON := []byte(`"not-a-uuid"`)
+	var uuid uuidv8.UUIDv8
+	if err := uuid.UnmarshalJSON(invalidJSON); err == nil {
+		t.Error("Expected error for invalid JSON input")
+	}
+}
+
+func TestNewWithParams_MaxValues(t *testing.T) {
+	node := []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+	timestamp := uint64(1<<60 - 1)
+	clockSeq := uint16(1<<12 - 1)
+
+	uuid, err := uuidv8.NewWithParams(timestamp, clockSeq, node, uuidv8.TimestampBits60)
+	if err != nil {
+		t.Fatalf("Failed to generate UUID with max values: %v", err)
+	}
+
+	if !uuidv8.IsValidUUIDv8(uuid) {
+		t.Errorf("Generated UUID with max values is invalid: %s", uuid)
+	}
+}
