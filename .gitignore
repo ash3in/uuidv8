@@ -1,3 +1,76 @@
+# IntelliJ IDEA (Goland)
+.idea/
+.idea/*
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/gradle.xml
+.idea/**/libraries/
+.idea/**/shelf/
+.idea/go/
+.idea/*.iml
+.idea/.idea_modules/
+*.iml
+
+# VSCode specific files
+.vscode/
+.vscode/*
+.vscode/extensions/
+.vscode/.history/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Log files (that may contain sensitive data)
+*.log
+*.log.*
+debug.log
+error.log
+
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace directories
+/bin/
+/obj/
+
+# Go build output
+*.out
+*.test
+
+# Environment files (store secrets and tokens)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Configuration files that may contain credentials
+config/secrets.yaml
+config/secrets.json
+config/*.json
+config/*.yaml
+
+# API keys and tokens
+api_keys.json
+tokens.json
+
+# Database credentials and configuration
+database.yml
+db_credentials.yml
+db_secrets.json
+
+# AWS credentials (ensure this includes the default AWS config directory)
+.aws/
+.aws-sdk/
+
+# Docker configuration with sensitive data
+docker-compose.override.yml
+*.docker.env
+
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
@@ -14,17 +87,7 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
 # Go workspace file
 go.work
 go.work.sum
 
-# env file
-.env
-.idea/modules.xml
-.idea/uuid-checker.iml
-.idea/vcs.xml
-.idea/uuidcheck.iml
-.idea/workspace.xml
