@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/ash3in/uuidv8"
 )
 
@@ -559,5 +561,61 @@ func TestNewWithParams_MaxValues(t *testing.T) {
 
 	if !uuidv8.IsValidUUIDv8(uuid) {
 		t.Errorf("Generated UUID with max values is invalid: %s", uuid)
+	}
+}
+
+func TestUUIDv8_Value(t *testing.T) {
+	// Mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock database: %v", err)
+	}
+	defer db.Close()
+
+	uuid := &uuidv8.UUIDv8{
+		Timestamp: 123456789,
+		ClockSeq:  0x0800,
+		Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+	}
+
+	expectedUUID := uuidv8.ToString(uuid)
+
+	mock.ExpectExec("INSERT INTO items").WithArgs(expectedUUID).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	_, err = db.Exec("INSERT INTO items (uuid) VALUES (?)", uuid)
+	if err != nil {
+		t.Errorf("Failed to execute mock database write: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
+	}
+}
+
+func TestUUIDv8_Scan(t *testing.T) {
+	// Mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock database: %v", err)
+	}
+	defer db.Close()
+
+	uuidStr := "9a3d4049-0e2c-8080-0102-030405060000"
+
+	rows := sqlmock.NewRows([]string{"uuid"}).AddRow(uuidStr)
+	mock.ExpectQuery("SELECT uuid FROM items").WillReturnRows(rows)
+
+	var uuid uuidv8.UUIDv8
+	err = db.QueryRow("SELECT uuid FROM items").Scan(&uuid)
+	if err != nil {
+		t.Errorf("Failed to scan mock database value: %v", err)
+	}
+
+	if uuidv8.ToString(&uuid) != uuidStr {
+		t.Errorf("Expected UUIDv8 %s, got %s", uuidStr, uuidv8.ToString(&uuid))
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
 	}
 }
