@@ -4,8 +4,10 @@ package uuidv8
 
 import (
 	"crypto/rand"
+	"database/sql/driver"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -256,5 +258,34 @@ func (u *UUIDv8) UnmarshalJSON(data []byte) error {
 	}
 
 	*u = *parsed
+	return nil
+}
+
+// Value implements the driver.Value interface for database writes.
+func (u *UUIDv8) Value() (driver.Value, error) {
+	if u == nil || len(u.Node) != 6 {
+		return nil, nil
+	}
+	return ToString(u), nil
+}
+
+// Scan implements the interface for database reads.
+func (u *UUIDv8) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case string:
+		parsed, err := FromString(v)
+		if err != nil {
+			return err
+		}
+		*u = *parsed
+	case []byte:
+		parsed, err := FromString(string(v))
+		if err != nil {
+			return err
+		}
+		*u = *parsed
+	default:
+		return errors.New("unsupported type for UUIDv8")
+	}
 	return nil
 }
