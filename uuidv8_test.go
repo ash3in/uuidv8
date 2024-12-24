@@ -619,3 +619,60 @@ func TestUUIDv8_Scan(t *testing.T) {
 		t.Errorf("Unmet expectations: %v", err)
 	}
 }
+
+func TestUUIDv8_Value_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		uuid     *uuidv8.UUIDv8
+		expected interface{}
+	}{
+		{"Valid UUIDv8", &uuidv8.UUIDv8{
+			Timestamp: 123456789,
+			ClockSeq:  0x0800,
+			Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+		}, "0000075b-cd15-8880-0102-030405060000"},
+		{"Nil UUIDv8", nil, nil},
+		{"Invalid Node Length", &uuidv8.UUIDv8{
+			Timestamp: 123456789,
+			ClockSeq:  0x0800,
+			Node:      []byte{0x01, 0x02},
+		}, nil},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			value, err := test.uuid.Value()
+			if err != nil && test.expected != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
+			if value != test.expected {
+				t.Errorf("Expected %v, got %v", test.expected, value)
+			}
+		})
+	}
+}
+
+func TestUUIDv8_Scan_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       interface{}
+		expectError bool
+	}{
+		{"Valid String UUID", "0000075b-cd15-8880-0102-030405060000", false},
+		{"Valid Byte UUID", []byte("9a3d4049-0e2c-8080-0102-030405060000"), false},
+		{"Invalid String Format", "invalid-uuid", true},
+		{"Invalid Type", 12345, true},
+		{"Empty String", "", true},
+		{"Empty Bytes", []byte{}, true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var uuid uuidv8.UUIDv8
+			err := uuid.Scan(test.input)
+			if (err != nil) != test.expectError {
+				t.Errorf("Unexpected error status: got %v, want error=%v", err, test.expectError)
+			}
+		})
+	}
+}
