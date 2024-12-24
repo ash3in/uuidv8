@@ -561,3 +561,56 @@ func TestNewWithParams_MaxValues(t *testing.T) {
 		t.Errorf("Generated UUID with max values is invalid: %s", uuid)
 	}
 }
+
+func TestFromString_InvalidInputs(t *testing.T) {
+	tests := []string{
+		"123",                                   // Too short
+		"123e4567e89b12d3a4564266141740000000",  // Too long
+		"123e4567e89b12d3a45642661417400g",      // Invalid character
+		"123e-4567-e89b-12d3-a456-426614174000", // Misplaced dashes
+	}
+
+	for _, input := range tests {
+		t.Run("Invalid UUID "+input, func(t *testing.T) {
+			_, err := uuidv8.FromString(input)
+			if err == nil {
+				t.Errorf("Expected error, got nil for input: %s", input)
+			}
+		})
+	}
+}
+
+func TestFromStringOrNil_InvalidInputs(t *testing.T) {
+	tests := []string{
+		"123",                                  // Too short
+		"123e4567e89b12d3a4564266141740000000", // Too long
+		"123e4567e89b12d3a45642661417400g",     // Invalid character
+		"",                                     // Empty string
+	}
+
+	for _, input := range tests {
+		t.Run("Invalid UUID "+input, func(t *testing.T) {
+			result := uuidv8.FromStringOrNil(input)
+			if result != nil {
+				t.Errorf("Expected nil for input: %s, got %v", input, result)
+			}
+		})
+	}
+}
+
+func TestIsValidUUIDv8_InvalidUUIDs(t *testing.T) {
+	invalidUUIDs := []string{
+		"123",                                  // Too short
+		"123e4567e89b12d3a4564266141740000000", // Too long
+		"123e4567e89b12d3a45642661417400g",     // Invalid character
+		"",                                     // Empty string
+	}
+
+	for _, uuid := range invalidUUIDs {
+		t.Run("Invalid UUID "+uuid, func(t *testing.T) {
+			if uuidv8.IsValidUUIDv8(uuid) {
+				t.Errorf("Expected UUID %s to be invalid", uuid)
+			}
+		})
+	}
+}
