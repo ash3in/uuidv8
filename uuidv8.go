@@ -284,8 +284,6 @@ func (u *UUIDv8) Scan(value interface{}) error {
 			return err
 		}
 		*u = *parsed
-	default:
-		return errors.New("unsupported type for UUIDv8")
 	}
-	return nil
+	return errors.New("unsupported type for UUIDv8")
 }
