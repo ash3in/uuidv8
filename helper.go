@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 // Helper function to encode timestamp into the UUID byte array.
@@ -30,13 +29,31 @@ func decodeTimestamp(uuidBytes []byte) uint64 {
 }
 
 // Helper function to parse and sanitize a UUID string.
+// Helper function to parse and sanitize a UUID string.
 func parseUUID(uuid string) ([]byte, error) {
-	uuid = strings.ReplaceAll(uuid, "-", "")
-	if len(uuid) != 32 {
+	switch len(uuid) {
+	case 32:
+		// Fast path for UUIDs without dashes
+		return hex.DecodeString(uuid)
+	case 36:
+		// Validate dash positions
+		if uuid[8] != '-' || uuid[13] != '-' || uuid[18] != '-' || uuid[23] != '-' {
+			return nil, errors.New("invalid UUID format")
+		}
+
+		// Remove dashes while copying characters
+		result := make([]byte, 32)
+		j := 0
+		for i := 0; i < len(uuid); i++ {
+			if uuid[i] != '-' {
+				result[j] = uuid[i]
+				j++
+			}
+		}
+		return hex.DecodeString(string(result))
+	default:
 		return nil, errors.New("invalid UUID length")
 	}
-
-	return hex.DecodeString(uuid)
 }
 
 // Helper function to check if a UUID is all zeros.
