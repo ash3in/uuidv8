@@ -723,17 +723,29 @@ func TestUUIDv8_Scan_EdgeCases(t *testing.T) {
 
 func TestFromString_InvalidInputs(t *testing.T) {
 	tests := []string{
-		"123",                                   // Too short
-		"123e4567e89b12d3a4564266141740000000",  // Too long
-		"123e4567e89b12d3a45642661417400g",      // Invalid character
-		"123e-4567-e89b-12d3-a456-426614174000", // Misplaced dashes
+		"123",                                    // Too short
+		"123e4567e89b12d3a4564266141740000000",   // Too long
+		"123e4567e89b12d3a45642661417400g",       // Invalid character
+		"123e-4567-e89b-12d3-a456-426614174000",  // Misplaced dashes
+		"123e4567-e89b-12d3-a456-426614174000-",  // Extra dash at the end
+		"--123e4567-e89b-12d3-a456-426614174000", // Extra dash at the start
+		"123e4567-e89b-12d3-a456-42-6614174000",  // Randomly placed dash
+		"------------------------------------",   // 36 dashes
+		"9a3d4049-0e2c-8080-0102-030405060000",   // Valid UUID with dashes
 	}
 
 	for _, input := range tests {
-		t.Run("Invalid UUID "+input, func(t *testing.T) {
+		t.Run("Testing UUID: "+input, func(t *testing.T) {
 			_, err := uuidv8.FromString(input)
-			if err == nil {
-				t.Errorf("Expected error, got nil for input: %s", input)
+			// The last case is valid; others should fail
+			if input == "9a3d4049-0e2c-8080-0102-030405060000" {
+				if err != nil {
+					t.Errorf("Expected valid UUID but got error for input: %s", input)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("Expected error, got nil for input: %s", input)
+				}
 			}
 		})
 	}
@@ -741,10 +753,13 @@ func TestFromString_InvalidInputs(t *testing.T) {
 
 func TestFromStringOrNil_InvalidInputs(t *testing.T) {
 	tests := []string{
-		"123",                                  // Too short
-		"123e4567e89b12d3a4564266141740000000", // Too long
-		"123e4567e89b12d3a45642661417400g",     // Invalid character
-		"",                                     // Empty string
+		"123",                                    // Too short
+		"123e4567e89b12d3a4564266141740000000",   // Too long
+		"123e4567e89b12d3a45642661417400g",       // Invalid character
+		"",                                       // Empty string
+		"123e4567-e89b-12d3-a456-426614174000-",  // Extra dash at the end
+		"--123e4567-e89b-12d3-a456-426614174000", // Extra dash at the start
+		"123e4567-e89b-12d3-a456-42-6614174000",  // Randomly placed dash
 	}
 
 	for _, input := range tests {
@@ -759,10 +774,14 @@ func TestFromStringOrNil_InvalidInputs(t *testing.T) {
 
 func TestIsValidUUIDv8_InvalidUUIDs(t *testing.T) {
 	invalidUUIDs := []string{
-		"123",                                  // Too short
-		"123e4567e89b12d3a4564266141740000000", // Too long
-		"123e4567e89b12d3a45642661417400g",     // Invalid character
-		"",                                     // Empty string
+		"123",                                    // Too short
+		"123e4567e89b12d3a4564266141740000000",   // Too long
+		"123e4567e89b12d3a45642661417400g",       // Invalid character
+		"",                                       // Empty string
+		"123e4567-e89b-12d3-a456-426614174000-",  // Extra dash at the end
+		"--123e4567-e89b-12d3-a456-426614174000", // Extra dash at the start
+		"123e4567-e89b-12d3-a456-42-6614174000",  // Randomly placed dash
+
 	}
 
 	for _, uuid := range invalidUUIDs {
