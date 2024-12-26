@@ -278,12 +278,14 @@ func (u *UUIDv8) Scan(value interface{}) error {
 			return err
 		}
 		*u = *parsed
+		return nil
 	case []byte:
 		parsed, err := FromString(string(v))
 		if err != nil {
 			return err
 		}
 		*u = *parsed
+		return nil
 	}
 	return errors.New("unsupported type for UUIDv8")
 }
