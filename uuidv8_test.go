@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/ash3in/uuidv8"
 )
 
@@ -559,6 +561,163 @@ func TestNewWithParams_MaxValues(t *testing.T) {
 
 	if !uuidv8.IsValidUUIDv8(uuid) {
 		t.Errorf("Generated UUID with max values is invalid: %s", uuid)
+	}
+}
+
+func TestUUIDv8_Value(t *testing.T) {
+	tests := []struct {
+		name        string
+		uuid        *uuidv8.UUIDv8
+		mockSetup   func(mock sqlmock.Sqlmock, uuidStr string)
+		expectError bool
+	}{
+		{
+			name: "Valid UUIDv8",
+			uuid: &uuidv8.UUIDv8{
+				Timestamp: 123456789,
+				ClockSeq:  0x0800,
+				Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+			},
+			mockSetup: func(mock sqlmock.Sqlmock, uuidStr string) {
+				mock.ExpectExec("INSERT INTO items").
+					WithArgs(uuidStr).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid Node Length",
+			uuid: &uuidv8.UUIDv8{
+				Timestamp: 123456789,
+				ClockSeq:  0x0800,
+				Node:      []byte{0x01, 0x02},
+			},
+			mockSetup:   func(mock sqlmock.Sqlmock, uuidStr string) {},
+			expectError: true,
+		},
+		{
+			name: "Nil UUIDv8",
+			uuid: nil,
+			mockSetup: func(mock sqlmock.Sqlmock, uuidStr string) {
+				mock.ExpectExec("INSERT INTO items").
+					WithArgs(nil).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			expectError: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Mock database
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("Failed to create mock database: %v", err)
+			}
+			defer db.Close()
+
+			var uuidStr string
+			if test.uuid != nil && len(test.uuid.Node) == 6 {
+				uuidStr = uuidv8.ToString(test.uuid)
+			}
+
+			test.mockSetup(mock, uuidStr)
+
+			_, err = db.Exec("INSERT INTO items (uuid) VALUES (?)", test.uuid)
+
+			if (err != nil) != test.expectError {
+				t.Errorf("Unexpected error status: got %v, want error=%v", err, test.expectError)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("Unmet expectations: %v", err)
+			}
+		})
+	}
+}
+
+func TestUUIDv8_Scan(t *testing.T) {
+	// Mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock database: %v", err)
+	}
+	defer db.Close()
+
+	uuidStr := "9a3d4049-0e2c-8080-0102-030405060000"
+
+	rows := sqlmock.NewRows([]string{"uuid"}).AddRow(uuidStr)
+	mock.ExpectQuery("SELECT uuid FROM items").WillReturnRows(rows)
+
+	var uuid uuidv8.UUIDv8
+	err = db.QueryRow("SELECT uuid FROM items").Scan(&uuid)
+	if err != nil {
+		t.Errorf("Failed to scan mock database value: %v", err)
+	}
+
+	if uuidv8.ToString(&uuid) != uuidStr {
+		t.Errorf("Expected UUIDv8 %s, got %s", uuidStr, uuidv8.ToString(&uuid))
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Unmet expectations: %v", err)
+	}
+}
+
+func TestUUIDv8_Value_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		uuid     *uuidv8.UUIDv8
+		expected interface{}
+	}{
+		{"Valid UUIDv8", &uuidv8.UUIDv8{
+			Timestamp: 123456789,
+			ClockSeq:  0x0800,
+			Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+		}, "0000075b-cd15-8880-0102-030405060000"},
+		{"Nil UUIDv8", nil, nil},
+		{"Invalid Node Length", &uuidv8.UUIDv8{
+			Timestamp: 123456789,
+			ClockSeq:  0x0800,
+			Node:      []byte{0x01, 0x02},
+		}, nil},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			value, err := test.uuid.Value()
+			if err != nil && test.expected != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
+			if value != test.expected {
+				t.Errorf("Expected %v, got %v", test.expected, value)
+			}
+		})
+	}
+}
+
+func TestUUIDv8_Scan_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       interface{}
+		expectError bool
+	}{
+		{"Valid String UUID", "0000075b-cd15-8880-0102-030405060000", false},
+		{"Valid Byte UUID", []byte("9a3d4049-0e2c-8080-0102-030405060000"), false},
+		{"Invalid String Format", "invalid-uuid", true},
+		{"Invalid Type", 12345, true},
+		{"Empty String", "", true},
+		{"Empty Bytes", []byte{}, true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var uuid uuidv8.UUIDv8
+			err := uuid.Scan(test.input)
+			if (err != nil) != test.expectError {
+				t.Errorf("Unexpected error status: got %v, want error=%v", err, test.expectError)
+			}
+		})
 	}
 }
 
