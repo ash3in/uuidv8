@@ -261,7 +261,7 @@ func (u *UUIDv8) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Value implements the driver.Value interface for database writes.
+// Value implements the [driver.Valuer] interface for database writes.
 func (u *UUIDv8) Value() (driver.Value, error) {
 	if u == nil || len(u.Node) != 6 {
 		return nil, nil
