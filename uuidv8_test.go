@@ -565,30 +565,74 @@ func TestNewWithParams_MaxValues(t *testing.T) {
 }
 
 func TestUUIDv8_Value(t *testing.T) {
-	// Mock database
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create mock database: %v", err)
+	tests := []struct {
+		name        string
+		uuid        *uuidv8.UUIDv8
+		mockSetup   func(mock sqlmock.Sqlmock, uuidStr string)
+		expectError bool
+	}{
+		{
+			name: "Valid UUIDv8",
+			uuid: &uuidv8.UUIDv8{
+				Timestamp: 123456789,
+				ClockSeq:  0x0800,
+				Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+			},
+			mockSetup: func(mock sqlmock.Sqlmock, uuidStr string) {
+				mock.ExpectExec("INSERT INTO items").
+					WithArgs(uuidStr).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid Node Length",
+			uuid: &uuidv8.UUIDv8{
+				Timestamp: 123456789,
+				ClockSeq:  0x0800,
+				Node:      []byte{0x01, 0x02},
+			},
+			mockSetup:   func(mock sqlmock.Sqlmock, uuidStr string) {},
+			expectError: true,
+		},
+		{
+			name: "Nil UUIDv8",
+			uuid: nil,
+			mockSetup: func(mock sqlmock.Sqlmock, uuidStr string) {
+				mock.ExpectExec("INSERT INTO items").
+					WithArgs(nil).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			expectError: false,
+		},
 	}
-	defer db.Close()
 
-	uuid := &uuidv8.UUIDv8{
-		Timestamp: 123456789,
-		ClockSeq:  0x0800,
-		Node:      []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
-	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Mock database
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("Failed to create mock database: %v", err)
+			}
+			defer db.Close()
 
-	expectedUUID := uuidv8.ToString(uuid)
+			var uuidStr string
+			if test.uuid != nil && len(test.uuid.Node) == 6 {
+				uuidStr = uuidv8.ToString(test.uuid)
+			}
 
-	mock.ExpectExec("INSERT INTO items").WithArgs(expectedUUID).WillReturnResult(sqlmock.NewResult(1, 1))
+			test.mockSetup(mock, uuidStr)
 
-	_, err = db.Exec("INSERT INTO items (uuid) VALUES (?)", uuid)
-	if err != nil {
-		t.Errorf("Failed to execute mock database write: %v", err)
-	}
+			_, err = db.Exec("INSERT INTO items (uuid) VALUES (?)", test.uuid)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Unmet expectations: %v", err)
+			if (err != nil) != test.expectError {
+				t.Errorf("Unexpected error status: got %v, want error=%v", err, test.expectError)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("Unmet expectations: %v", err)
+			}
+		})
 	}
 }
 

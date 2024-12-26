@@ -263,10 +263,13 @@ func (u *UUIDv8) UnmarshalJSON(data []byte) error {
 
 // Value implements the [driver.Valuer] interface for database writes.
 func (u *UUIDv8) Value() (driver.Value, error) {
-	if u == nil || len(u.Node) != 6 {
-		return nil, nil
+	if u == nil {
+		return nil, nil // Return nil for a nil UUID
 	}
-	return ToString(u), nil
+	if len(u.Node) != 6 {
+		return nil, fmt.Errorf("invalid UUIDv8: node length must be 6 bytes, got %d bytes", len(u.Node))
+	}
+	return ToString(u), nil // Convert to string for database storage
 }
 
 // Scan implements the [sql.Scanner] interface for database reads.
