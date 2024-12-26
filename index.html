@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>uuidv8 | Your go-to for all things UUIDv8 in Go.</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="uuidv8" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Your go-to for all things UUIDv8 in Go." />
+<meta property="og:description" content="Your go-to for all things UUIDv8 in Go." />
+<link rel="canonical" href="https://ash3in.github.io/uuidv8/" />
+<meta property="og:url" content="https://ash3in.github.io/uuidv8/" />
+<meta property="og:site_name" content="uuidv8" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="uuidv8" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Your go-to for all things UUIDv8 in Go.","headline":"uuidv8","name":"uuidv8","url":"https://ash3in.github.io/uuidv8/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/uuidv8/assets/css/style.css?v=657d581c8d002c8a358690fe21e6f51ee71fafe6">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+<meta name="google-site-verification" content="egeh-xrx7kebZrDbDDBe0k6TlK43sWpxRbtis5ZVdpc" />
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/uuidv8/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+
+      <h1 id="uuidv8">uuidv8</h1>
+<p><a href="https://pkg.go.dev/github.com/ash3in/uuidv8"><img src="https://pkg.go.dev/badge/github.com/ash3in/uuidv8.svg" alt="Go Reference" /></a>
+<a href="https://goreportcard.com/report/github.com/ash3in/uuidv8"><img src="https://goreportcard.com/badge/github.com/ash3in/uuidv8" alt="Go Report Card" /></a>
+<a href="https://codecov.io/gh/ash3in/uuidv8"><img src="https://codecov.io/gh/ash3in/uuidv8/branch/main/graph/badge.svg" alt="Coverage Status" /></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a></p>
+
+<p>Your go-to for all things UUIDv8 in Go.</p>
+
+<hr />
+
+<h2 id="why-this-library">Why this library?</h2>
+
+<p>Hey there! Welcome to <strong>uuidv8</strong>, a Go library built for developers who live and breathe distributed systems - whether you’re wrangling microservices, data pipelines or processing transaction ledgers in fintech. <code class="language-plaintext highlighter-rouge">UUIDv8</code> might be afresh on the block, but its flexibility may become a game-changer for time-based unique identifiers.</p>
+
+<p>After years of building modern fintech systems where every millisecond counts, I found myself transitioning from <code class="language-plaintext highlighter-rouge">UUIDv4</code> to <code class="language-plaintext highlighter-rouge">UUIDv7</code> for its time-first structure. Then there’s <code class="language-plaintext highlighter-rouge">UUIDv8</code> and… no big solid Go libraries to support it. So, I decided to take a step.</p>
+
+<p><strong>uuidv8</strong> is simple, clean and built with real-world use in mind. No bloat. No unnecessary dependencies. Just the Go standard library, doing what it does best. It’s perfect for scenarios where precision, reliability and ease of use matter - because let’s be honest, that’s most of our work.</p>
+
+<hr />
+
+<h2 id="highlights">Highlights</h2>
+
+<ul>
+  <li><strong>Zero external dependencies</strong>: Built entirely on Go’s standard library.</li>
+  <li><strong>Real-world focus</strong>: Designed with distributed systems and precision-critical workflows in mind.</li>
+  <li><strong>Flexibility</strong>: Use <code class="language-plaintext highlighter-rouge">New()</code> for simplicity or <code class="language-plaintext highlighter-rouge">NewWithParams()</code> when you need custom configurations.</li>
+  <li><strong>Thoroughly tested</strong>: Built and tested with the same rigor you’d expect in a production fintech system.</li>
+</ul>
+
+<hr />
+
+<h2 id="installation">Installation</h2>
+
+<p>Get started in seconds:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go get github.com/ash3in/uuidv8
+</code></pre></div></div>
+
+<p>That’s it. No extras, no setup headaches.</p>
+
+<hr />
+
+<h2 id="quick-start">Quick Start</h2>
+
+<h3 id="the-easy-way-new">The Easy Way: <code class="language-plaintext highlighter-rouge">New()</code></h3>
+
+<p>If all you need is a reliable UUIDv8, <code class="language-plaintext highlighter-rouge">New()</code> has you covered.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"log"</span>
+
+	<span class="s">"github.com/ash3in/uuidv8"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="n">uuid</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">New</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Error generating UUIDv8: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Generated UUIDv8:"</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>No fuss. No setup. Just a fully compliant UUIDv8 - ready for your system.</p>
+
+<hr />
+
+<h3 id="full-control-newwithparams">Full Control: <code class="language-plaintext highlighter-rouge">NewWithParams()</code></h3>
+
+<p>Need more control? You can customize everything: timestamp, clock sequence, and node.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">timestamp</span> <span class="o">:=</span> <span class="kt">uint64</span><span class="p">(</span><span class="m">1633024800000000000</span><span class="p">)</span> <span class="c">// Custom timestamp</span>
+<span class="n">clockSeq</span> <span class="o">:=</span> <span class="kt">uint16</span><span class="p">(</span><span class="m">1234</span><span class="p">)</span>                <span class="c">// Custom clock sequence</span>
+<span class="n">node</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">{</span><span class="m">0x01</span><span class="p">,</span> <span class="m">0x02</span><span class="p">,</span> <span class="m">0x03</span><span class="p">,</span> <span class="m">0x04</span><span class="p">,</span> <span class="m">0x05</span><span class="p">,</span> <span class="m">0x06</span><span class="p">}</span> <span class="c">// Custom node</span>
+
+<span class="n">uuid</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">NewWithParams</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">clockSeq</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">TimestampBits48</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Error generating custom UUIDv8: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Custom UUIDv8:"</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Perfect for deterministic UUIDs in tests or tightly controlled distributed environments.</p>
+
+<hr />
+
+<h3 id="parse-and-validate-uuidv8s">Parse and Validate UUIDv8s</h3>
+
+<p>Easily parse UUIDv8 strings or validate their compliance:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">uuidStr</span> <span class="o">:=</span> <span class="s">"01b69b4f-0000-8800-0102-030405060000"</span>
+
+<span class="c">// Parse UUIDv8</span>
+<span class="n">parsed</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">FromString</span><span class="p">(</span><span class="n">uuidStr</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+	<span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Error parsing UUIDv8: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Timestamp: %d, ClockSeq: %d, Node: %x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">parsed</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">,</span> <span class="n">parsed</span><span class="o">.</span><span class="n">ClockSeq</span><span class="p">,</span> <span class="n">parsed</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+
+<span class="c">// Validate UUIDv8</span>
+<span class="k">if</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">IsValidUUIDv8</span><span class="p">(</span><span class="n">uuidStr</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Valid UUIDv8"</span><span class="p">)</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Invalid UUIDv8"</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<hr />
+
+<h3 id="json-serialization-and-deserialization">JSON Serialization and Deserialization</h3>
+
+<p>Seamlessly integrate UUIDv8 with your APIs and data storage:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">// Serialize</span>
+<span class="n">uuid</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">uuidv8</span><span class="o">.</span><span class="n">UUIDv8</span><span class="p">{</span><span class="n">Timestamp</span><span class="o">:</span> <span class="m">123456789</span><span class="p">,</span> <span class="n">ClockSeq</span><span class="o">:</span> <span class="m">0x0800</span><span class="p">,</span> <span class="n">Node</span><span class="o">:</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">{</span><span class="m">0x01</span><span class="p">,</span> <span class="m">0x02</span><span class="p">,</span> <span class="m">0x03</span><span class="p">,</span> <span class="m">0x04</span><span class="p">,</span> <span class="m">0x05</span><span class="p">,</span> <span class="m">0x06</span><span class="p">}}</span>
+<span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span>
+<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="kt">string</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="c">// Output: "01b69b4f-0000-8800-0102-030405060000"</span>
+
+<span class="c">// Deserialize</span>
+<span class="k">var</span> <span class="n">parsedUUID</span> <span class="n">uuidv8</span><span class="o">.</span><span class="n">UUIDv8</span>
+<span class="n">json</span><span class="o">.</span><span class="n">Unmarshal</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="s">`"01b69b4f-0000-8800-0102-030405060000"`</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">parsedUUID</span><span class="p">)</span>
+<span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Parsed UUIDv8: %+v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">parsedUUID</span><span class="p">)</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="why-uuidv8">Why UUIDv8?</h2>
+
+<p>UUIDv8 is designed for scenarios where flexibility and time-based uniqueness are critical. It bridges the gap between structure and freedom - ideal for event logs, transaction IDs, or any use case that demands precise identifiers. And with <strong>uuidv8</strong>, you get full compliance with the <a href="https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-01.html#name-uuidv8-layout-and-bit-order">spec</a>, minus the overhead.</p>
+
+<h2 id="whos-it-for">Who’s it for?</h2>
+
+<p><strong>Lightweight. Reliable. Built for Go Devs.</strong></p>
+
+<p>If you’re building fintech solutions or distributed applications and need UUIDv8 support that’s robust yet lightweight, uuidv8 is for you. It’s crafted to simplify your work while keeping your systems reliable</p>
+
+<hr />
+
+<h2 id="testing">Testing</h2>
+
+<p>Whether it’s high-concurrency workloads in distributed systems or edge cases like all-zero UUIDs, this library has been tested to handle them all.</p>
+
+<p>Run the tests yourself:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go <span class="nb">test</span> ./...
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="contributing">Contributing</h2>
+
+<p>Got ideas? Found a bug or a mistake? Think this could be even better? Let’s make it happen. Open an issue or a PR and let’s collaborate.</p>
+
+<hr />
+
+<h2 id="license">License</h2>
+
+<p>MIT License. Do whatever you want with it – just build something awesome.</p>
+
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        This site is open source. <a href="https://github.com/ash3in/uuidv8/edit/main/README.md">Improve this page</a>.
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>
