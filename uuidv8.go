@@ -269,7 +269,7 @@ func (u *UUIDv8) Value() (driver.Value, error) {
 	return ToString(u), nil
 }
 
-// Scan implements the interface for database reads.
+// Scan implements the [sql.Scanner] interface for database reads.
 func (u *UUIDv8) Scan(value interface{}) error {
 	switch v := value.(type) {
 	case string:
