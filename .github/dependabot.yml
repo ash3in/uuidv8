@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"  
+    directory: "/"              
+    schedule:
+      interval: "monthly"        
+      day: "monday"             
+    open-pull-requests-limit: 3 
+    reviewers:                  
+      - "ashwingopalsamy"
+    assignees:                  
+      - "ashwingopalsamy"
+    labels:                     
+      - "dependencies"
+      - "automated"
+    commit-message:            
+      prefix: "chore(deps):"
+      include: "scope"
